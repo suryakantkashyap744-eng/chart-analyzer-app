@@ -1,0 +1,49 @@
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+
+st.title("Easy Chart Analyzer")
+st.write("Upload a CSV file to analyze charts and data trends.")
+
+# File uploader
+uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
+
+if uploaded_file is not None:
+    # Load data
+    df = pd.read_csv(uploaded_file)
+    st.write("### Data Preview")
+    st.dataframe(df.head())
+    
+    # Select columns for analysis
+    numeric_cols = df.select_dtypes(include=['number']).columns.tolist()
+    if numeric_cols:
+        x_col = st.selectbox("Select X-axis (e.g., time or category)", df.columns)
+        y_col = st.selectbox("Select Y-axis (numeric)", numeric_cols)
+        
+        # Chart type selection
+        chart_type = st.selectbox("Choose chart type", ["Line", "Bar", "Scatter", "Histogram"])
+        
+        # Generate chart
+        if chart_type == "Line":
+            fig = px.line(df, x=x_col, y=y_col, title=f"{y_col} over {x_col}")
+        elif chart_type == "Bar":
+            fig = px.bar(df, x=x_col, y=y_col, title=f"{y_col} by {x_col}")
+        elif chart_type == "Scatter":
+            fig = px.scatter(df, x=x_col, y=y_col, title=f"{y_col} vs {x_col}")
+        elif chart_type == "Histogram":
+            fig = px.histogram(df, x=y_col, title=f"Distribution of {y_col}")
+        
+        st.plotly_chart(fig)
+        
+        # Basic analysis
+        st.write("### Quick Analysis")
+        st.write(f"Mean of {y_col}: {df[y_col].mean():.2f}")
+        st.write(f"Max of {y_col}: {df[y_col].max():.2f}")
+        st.write(f"Min of {y_col}: {df[y_col].min():.2f}")
+        if df[x_col].dtype == 'object':
+            st.write(f"Unique categories in {x_col}: {df[x_col].nunique()}")
+    else:
+        st.error("No numeric columns found for Y-axis. Please upload a CSV with numbers.")
+else:
+    st.info("Upload a CSV file to get started. Example: A file with columns like 'Date' and 'Price' for stock analysis.")
